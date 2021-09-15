@@ -73,7 +73,7 @@ func (this Cursor) printHL(s string, p *regexp.Regexp, st tcell.Style, pfunc fun
 func (this Cursor) print(s string) Cursor {
 	for _, ch := range s {
 		switch ch {
-		case '"':
+		case '"', '\'', '(', '{', '}', ')', ',', ':', '[', ']', '/':
 			this.scr.scr.SetContent(this.X, this.Y, ch, nil, this.Style.Dim(true))
 		case '\t':
 			this.scr.scr.SetContent(this.X, this.Y, '⇥', nil, this.Style.Bold(true).Foreground(tcell.Color220))
