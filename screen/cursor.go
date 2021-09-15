@@ -39,19 +39,15 @@ func (this Cursor) Printf(f string, args ...interface{}) Cursor {
 
 var reKeywords = regexp.MustCompile(`\b(error|err|panic|close|invalid)`)
 
-var styleKeyword = tcell.StyleDefault.Foreground(tcell.Color156)
-var styleMatch = tcell.StyleDefault.Foreground(tcell.Color87).Bold(true)
-
 func (this Cursor) Print(s string) Cursor {
-	//return this.print(s)
 	if this.pattern == nil {
-		return this.printHL(s, reKeywords, styleKeyword, func(c Cursor, s string) Cursor {
-			return c.print(s)
+		return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color156), func(this Cursor, s string) Cursor {
+			return this.print(s)
 		})
 	} else {
-		return this.printHL(s, this.pattern, styleMatch, func(c Cursor, s string) Cursor {
-			return c.printHL(s, reKeywords, styleKeyword, func(c Cursor, s string) Cursor {
-				return c.print(s)
+		return this.printHL(s, this.pattern, this.Style.Foreground(tcell.Color87).Bold(true), func(this Cursor, s string) Cursor {
+			return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color156), func(this Cursor, s string) Cursor {
+				return this.print(s)
 			})
 		})
 	}
@@ -77,6 +73,8 @@ func (this Cursor) printHL(s string, p *regexp.Regexp, st tcell.Style, pfunc fun
 func (this Cursor) print(s string) Cursor {
 	for _, ch := range s {
 		switch ch {
+		case '"':
+			this.scr.scr.SetContent(this.X, this.Y, ch, nil, this.Style.Dim(true))
 		case '\t':
 			this.scr.scr.SetContent(this.X, this.Y, '⇥', nil, this.Style.Bold(true).Foreground(tcell.Color220))
 		case '\n':

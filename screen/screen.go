@@ -230,6 +230,9 @@ func (this *Screen) Repaint() {
 		if this.col != 0 {
 			cur = cur.Printf("col: %d ", this.col)
 		}
+		if this.buffer != this.origBuf {
+			cur = cur.Printf(" (orig: %d lines)", len(this.origBuf.Lines))
+		}
 		this.scr.HideCursor()
 		switch this.query {
 		case "":

@@ -204,6 +204,13 @@ func (this *Screen) eventNav(ev *tcell.EventKey) error {
 			}
 			this.Repaint()
 
+		case 'M': // unmark all
+			this.buffer.Range(func(i int, l *tbuf.Line) bool {
+				l.Mark = false
+				return true
+			})
+			this.Repaint()
+
 		case 'm': // mark searches
 			if this.pattern != nil {
 				this.buffer.Range(func(i int, l *tbuf.Line) bool {
