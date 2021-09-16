@@ -149,7 +149,7 @@ func (this Cursor) Bg(col tcell.Color) Cursor {
 func (this Cursor) ColByLevel(l string) Cursor {
 	_, bg, _ := this.Style.Decompose()
 	r, g, b := bg.RGB()
-	invert := r+g+b > 100
+	invert := r+g+b > 200
 	if bg == -1 {
 		invert = false
 	}

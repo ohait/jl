@@ -169,7 +169,7 @@ func (this *Screen) Repaint() {
 		case 0: // none
 		case 1: // tags
 			cur.X = 24 - this.col
-			cur = cur.Fg(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
+			cur = cur.Fg(tcell.ColorTeal).Printf(" time: %v, level: %s", line.Time.UTC(), line.Level).Clear()
 			for _, tag := range line.SortedTags() {
 				v := line.Tags[tag]
 				if len(v) == 0 {
@@ -213,7 +213,7 @@ func (this *Screen) Repaint() {
 				cur = cur.PrintfHL(" %s", s).Clear()
 			}
 			cur.X = 24 - this.col
-			cur = cur.Fg(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
+			cur = cur.Fg(tcell.ColorTeal).Printf(" time: %v, level: %s", line.Time.UTC(), line.Level).Clear()
 			//cur.X = 24
 			//cur = cur.Clear()
 		}
