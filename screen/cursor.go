@@ -42,16 +42,16 @@ func (this Cursor) Printf(f string, args ...interface{}) Cursor {
 	return this.Print(fmt.Sprintf(f, args...))
 }
 
-var reKeywords = regexp.MustCompile(`\b(error|err|panic|close|invalid)`)
+var reKeywords = regexp.MustCompile(`\b((?i)error|err|panic|closed?|invalid)\b`)
 
 func (this Cursor) PrintHL(s string) Cursor {
 	if this.pattern == nil {
-		return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color156), func(this Cursor, s string) Cursor {
+		return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color173), func(this Cursor, s string) Cursor {
 			return this.print(s, true)
 		})
 	} else {
 		return this.printHL(s, this.pattern, this.Style.Foreground(tcell.Color87).Bold(true), func(this Cursor, s string) Cursor {
-			return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color156), func(this Cursor, s string) Cursor {
+			return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color173), func(this Cursor, s string) Cursor {
 				return this.print(s, true)
 			})
 		})

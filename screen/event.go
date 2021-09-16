@@ -23,7 +23,7 @@ func (this *Screen) event(ev tcell.Event) error {
 			return this.eventNav(ev)
 		}
 	case *tcell.EventResize:
-		// TODO
+		this.Refresh = true
 		return nil
 	default:
 		return fmt.Errorf("unexpected event: %#v", ev)
@@ -31,6 +31,7 @@ func (this *Screen) event(ev tcell.Event) error {
 }
 
 func (this *Screen) eventQuery(ev *tcell.EventKey) error {
+	this.log("eventQuery(%+v)", ev)
 	switch ev.Key() {
 	case tcell.KeyLeft:
 		this.input.Get().Left()
@@ -72,6 +73,7 @@ func (this *Screen) eventQuery(ev *tcell.EventKey) error {
 }
 
 func (this *Screen) eventNav(ev *tcell.EventKey) error {
+	this.log("eventNav(%+v)", ev)
 	_, h := this.scr.Size()
 	switch ev.Key() {
 	case tcell.KeyF1:
@@ -90,23 +92,25 @@ func (this *Screen) eventNav(ev *tcell.EventKey) error {
 		}
 		this.Repaint()
 	case tcell.KeyPgUp:
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 25; i++ {
 			this.buffer.Up(nil)
 		}
-		this.row -= 10
+		this.row -= 25
 		if this.row < 0 {
 			this.row = 0
 		}
-		this.Repaint()
+		//this.Repaint()
+		this.Refresh = true
 	case tcell.KeyPgDn:
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 25; i++ {
 			this.buffer.Down(nil)
 		}
-		this.row += 10
+		this.row += 25
 		if this.row > h-2 {
 			this.row = h - 2
 		}
-		this.Repaint()
+		//this.Repaint()
+		this.Refresh = true
 
 	case tcell.KeyLeft:
 		if this.col >= 20 {
@@ -155,6 +159,7 @@ func (this *Screen) eventNav(ev *tcell.EventKey) error {
 					this.pattern, _ = regexp.Compile(regexp.QuoteMeta(p))
 				}
 			}
+			this.onChange()
 			this.Repaint()
 
 		case 'n': //scan next

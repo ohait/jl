@@ -18,4 +18,6 @@ func TestColor(t *testing.T) {
 		r, g, b := fg.RGB()
 		t.Logf("fg: RGB: %d, %d, %d", r, g, b)
 	}
+	t.Logf("test: \x1b[38;5;226mXXXX\x1b[0m")
+	t.Logf("test: \x1b[38;2;150;250;50mRGB\x1b[0m")
 }

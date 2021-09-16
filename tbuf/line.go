@@ -55,6 +55,8 @@ func (this *Buffer) Append(s string, log func(...interface{})) {
 	this.Last = time.Now()
 }
 func (this *Buffer) AppendLine(l Line) {
+	this.m.Lock()
+	defer this.m.Unlock()
 	this.Lines = append(this.Lines, l)
 }
 

@@ -118,12 +118,12 @@ func (this *Screen) Repaint() {
 	}
 
 	// before
-	pos := this.buffer.Pos
+	bc := this.buffer.NewCursor()
 	for y := 1; y < 100; y++ {
 		if this.row-y < 0 {
 			break
 		}
-		if line, ok := this.buffer.Up(nil); ok {
+		if line, ok := bc.Up(nil); ok {
 			cur := this.NewCursor(-this.col, this.row-y)
 			if this.pattern != nil && !this.pattern.MatchString(line.Str) {
 				cur.Style = nomatch
@@ -138,12 +138,12 @@ func (this *Screen) Repaint() {
 	}
 
 	// after
-	this.buffer.Pos = pos
+	bc = this.buffer.NewCursor()
 	for y := 1; y < 100; y++ {
 		if y+this.row >= h {
 			break
 		}
-		if line, ok := this.buffer.Down(nil); ok {
+		if line, ok := bc.Down(nil); ok {
 			cur := this.NewCursor(-this.col, this.row+y)
 			if this.pattern != nil && !this.pattern.MatchString(line.Str) {
 				cur.Style = nomatch
@@ -155,7 +155,6 @@ func (this *Screen) Repaint() {
 	}
 
 	// cursor
-	this.buffer.Pos = pos
 	cur := this.NewCursor(-this.col, this.row)
 	cur.Style = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite)
 	if line, ok := this.buffer.Get(); ok {

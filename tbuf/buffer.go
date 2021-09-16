@@ -12,6 +12,18 @@ type Buffer struct {
 	Last  time.Time
 }
 
+func (this *Buffer) Size() int {
+	this.m.Lock()
+	defer this.m.Unlock()
+	return len(this.Lines)
+}
+
+func (this *Buffer) At(pos int) Line {
+	this.m.Lock()
+	defer this.m.Unlock()
+	return this.Lines[pos]
+}
+
 func (this *Buffer) Range(f func(i int, l *Line) bool) {
 	this.m.Lock()
 	defer this.m.Unlock()
@@ -53,47 +65,23 @@ func (this *Buffer) Get() (Line, bool) {
 }
 
 func (this *Buffer) Down(f func(s Line) bool) (Line, bool) {
+	cur := this.NewCursor()
+	l, ok := cur.Down(f)
 	this.m.Lock()
 	defer this.m.Unlock()
-	if this.Pos >= len(this.Lines) { // already to the tail
-		return Line{}, false
+	if ok {
+		this.Pos = cur.Cur
+	} else {
+		this.Pos = len(this.Lines) // TAIL
 	}
-	if len(this.Lines) == 0 {
-		return Line{}, false
-	}
-
-	p := this.Pos
-	for {
-		p++
-		if p >= len(this.Lines) {
-			this.Pos = p
-			return this.Lines[len(this.Lines)-1], false
-		}
-		if f == nil || f(this.Lines[p]) {
-
-			this.Pos = p
-			return this.Lines[p], true
-		}
-	}
+	return l, ok
 }
 
 func (this *Buffer) Up(f func(s Line) bool) (Line, bool) {
+	cur := this.NewCursor()
+	l, ok := cur.Up(f)
 	this.m.Lock()
 	defer this.m.Unlock()
-	if this.Pos == 0 {
-		return Line{}, false
-	}
-
-	p := this.Pos
-	for {
-		p--
-		if p <= 0 {
-			this.Pos = 0
-			return this.Lines[0], true
-		}
-		if f == nil || f(this.Lines[p]) {
-			this.Pos = p
-			return this.Lines[p], true
-		}
-	}
+	this.Pos = cur.Cur
+	return l, ok
 }
