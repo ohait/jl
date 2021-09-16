@@ -59,7 +59,6 @@ func (this *Buffer) AppendLine(l Line) {
 }
 
 func ParseLine(s string, log func(...interface{})) (out Line) {
-	//out.Orig = s
 	out.Str = s
 	if len(s) < 2 {
 		return

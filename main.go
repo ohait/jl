@@ -12,6 +12,7 @@ import (
 
 	"github.com/ohait/jl/screen"
 	"github.com/ohait/jl/tbuf"
+	"github.com/ohait/jl/util"
 	"golang.org/x/sys/unix"
 )
 
@@ -117,6 +118,7 @@ func read(f io.Reader, fname string) {
 		if err != nil {
 			return
 		}
+		util.Chop(&l) // remove trailing \n
 		buffer.Append(l, log)
 	}
 }

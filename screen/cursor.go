@@ -16,6 +16,7 @@ func (this *Screen) NewCursor(x, y int) Cursor {
 		X:       x,
 		Y:       y,
 		pattern: this.pattern,
+		Style:   tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.Color234),
 	}
 }
 
@@ -33,21 +34,25 @@ func (this Cursor) CR(x int) Cursor {
 	return this
 }
 
+func (this Cursor) PrintfHL(f string, args ...interface{}) Cursor {
+	return this.PrintHL(fmt.Sprintf(f, args...))
+}
+
 func (this Cursor) Printf(f string, args ...interface{}) Cursor {
 	return this.Print(fmt.Sprintf(f, args...))
 }
 
 var reKeywords = regexp.MustCompile(`\b(error|err|panic|close|invalid)`)
 
-func (this Cursor) Print(s string) Cursor {
+func (this Cursor) PrintHL(s string) Cursor {
 	if this.pattern == nil {
 		return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color156), func(this Cursor, s string) Cursor {
-			return this.print(s)
+			return this.print(s, true)
 		})
 	} else {
 		return this.printHL(s, this.pattern, this.Style.Foreground(tcell.Color87).Bold(true), func(this Cursor, s string) Cursor {
 			return this.printHL(s, reKeywords, this.Style.Foreground(tcell.Color156), func(this Cursor, s string) Cursor {
-				return this.print(s)
+				return this.print(s, true)
 			})
 		})
 	}
@@ -70,11 +75,15 @@ func (this Cursor) printHL(s string, p *regexp.Regexp, st tcell.Style, pfunc fun
 	return this
 }
 
-func (this Cursor) print(s string) Cursor {
+func (this Cursor) Print(s string) Cursor {
+	return this.print(s, false)
+}
+
+func (this Cursor) print(s string, dim bool) Cursor {
 	for _, ch := range s {
 		switch ch {
 		case '"', '\'', '(', '{', '}', ')', ',', ':', '[', ']', '/':
-			this.scr.scr.SetContent(this.X, this.Y, ch, nil, this.Style.Dim(true))
+			this.scr.scr.SetContent(this.X, this.Y, ch, nil, this.Style.Dim(dim))
 		case '\t':
 			this.scr.scr.SetContent(this.X, this.Y, '⇥', nil, this.Style.Bold(true).Foreground(tcell.Color220))
 		case '\n':
@@ -117,44 +126,73 @@ func (this Cursor) Clear() Cursor {
 	return this.Fill(' ')
 }
 
-func (this Cursor) Col(col tcell.Color) Cursor {
+func (this Cursor) Reverse(r bool) Cursor {
+	this.Style = this.Style.Reverse(r)
+	return this
+}
+
+func (this Cursor) Col(fg, bg tcell.Color) Cursor {
+	this.Style = this.Style.Foreground(fg).Background(bg)
+	return this
+}
+
+func (this Cursor) Fg(col tcell.Color) Cursor {
 	this.Style = this.Style.Foreground(col)
 	return this
 }
 
+func (this Cursor) Bg(col tcell.Color) Cursor {
+	this.Style = this.Style.Background(col)
+	return this
+}
+
 func (this Cursor) ColByLevel(l string) Cursor {
+	_, bg, _ := this.Style.Decompose()
+	r, g, b := bg.RGB()
+	invert := r+g+b > 100
+	if bg == -1 {
+		invert = false
+	}
+	var col tcell.Color
 	switch strings.ToLower(l) {
 	case "debug":
-		return this.Col(tcell.ColorDarkCyan)
+		col = tcell.Color66
 	case "info":
-		return this.Col(tcell.ColorLightCyan)
+		col = tcell.Color116
 	case "notice":
-		return this.Col(tcell.ColorWhite)
+		col = tcell.ColorWhite
 	case "warn":
-		return this.Col(tcell.ColorYellow)
+		col = tcell.ColorYellow
 	case "error":
-		return this.Col(tcell.ColorRed)
+		col = tcell.ColorRed
 	default:
 		return this
+	}
+	if invert {
+		return this.Bg(col)
+	} else {
+		return this.Fg(col)
 	}
 }
 
 func (this Cursor) Level(l string) Cursor {
-	fg, _, _ := this.Style.Decompose()
+	fg, bg, _ := this.Style.Decompose()
+	var label string
 	switch strings.ToLower(l) {
 	case "debug":
-		this = this.Col(tcell.ColorDarkCyan).Print("dbg").Col(fg)
+		label = "dbg"
 	case "info":
-		this = this.Col(tcell.ColorLightCyan).Print("inf").Col(fg)
+		label = "inf"
 	case "notice":
-		this = this.Col(tcell.ColorWhite).Print("---").Col(fg)
+		label = "ntc"
 	case "warn":
-		this = this.Col(tcell.ColorYellow).Print("WRN").Col(fg)
+		label = "WRN"
 	case "error":
-		this = this.Col(tcell.ColorRed).Print("ERR").Col(fg)
+		label = "ERR"
 	default:
-		this = this.Print(l)
+		label = l
 	}
+	this = this.ColByLevel(l).print(label, false).Col(fg, bg)
 	return this
 }
 
@@ -164,15 +202,15 @@ func (this Cursor) Line(l tbuf.Line, padding int) Cursor {
 	}
 	fg, _, _ := this.Style.Decompose()
 	if !l.Time.IsZero() {
-		this = this.Col(tcell.Color246).Time(l.Time)
-		this = this.Print(" ").Col(fg)
+		this = this.Fg(tcell.Color246).Time(l.Time)
+		this = this.Print(" ").Fg(fg)
 	}
 	this = this.Level(l.Level)
 	this = this.Print(" ")
 	if l.Short != "" {
-		this = this.Print(l.Short)
+		this = this.PrintHL(l.Short)
 	} else {
-		this = this.Print(l.Str)
+		this = this.PrintHL(l.Str)
 	}
 	return this.Clear()
 }

@@ -90,7 +90,7 @@ func (this *Screen) handleEvent(ev tcell.Event) error {
 	default:
 		this.log("on poll: %v", err)
 		_, h := this.scr.Size()
-		this.NewCursor(0, h-1).Col(tcell.ColorPink).Printf("ERROR: %v", err).Clear()
+		this.NewCursor(0, h-1).Fg(tcell.ColorPink).Printf("ERROR: %v", err).Clear()
 		time.Sleep(time.Second)
 		return nil
 	}
@@ -105,7 +105,7 @@ func (this *Screen) Repaint() {
 	w, h := this.scr.Size()
 	this.log("repaint (size: %d/%d, this.row: %d, buff: %d)", w, h, this.row, this.buffer.Pos)
 
-	nomatch := tcell.StyleDefault.Foreground(tcell.Color246)
+	nomatch := tcell.StyleDefault.Foreground(tcell.Color246).Background(tcell.Color232)
 
 	if this.details > 0 {
 		if this.row < 5 {
@@ -157,7 +157,7 @@ func (this *Screen) Repaint() {
 	// cursor
 	this.buffer.Pos = pos
 	cur := this.NewCursor(-this.col, this.row)
-	cur.Style = tcell.StyleDefault.Reverse(true)
+	cur.Style = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite)
 	if line, ok := this.buffer.Get(); ok {
 		//this.log("cur: %+v", line)
 
@@ -169,14 +169,14 @@ func (this *Screen) Repaint() {
 		case 0: // none
 		case 1: // tags
 			cur.X = 24 - this.col
-			cur = cur.Col(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
+			cur = cur.Fg(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
 			for _, tag := range line.SortedTags() {
 				v := line.Tags[tag]
 				if len(v) == 0 {
 					continue
 				}
 				cur.X = 24 - this.col
-				cur = cur.Col(tcell.ColorOrange).Printf(" %s: ", tag).Col(tcell.ColorWhite)
+				cur = cur.Fg(tcell.ColorOrange).Printf(" %s: ", tag).Fg(tcell.ColorWhite)
 				if len(v) > 40 && v[0] == '{' {
 					var x interface{}
 					err := json.Unmarshal(v, &x)
@@ -188,13 +188,13 @@ func (this *Screen) Repaint() {
 							this.log("subtag: %q", l)
 							cur = cur.Clear()
 							cur.X = 24 - this.col
-							cur = cur.Printf("    %s", l)
+							cur = cur.PrintfHL("    %s", l)
 						}
 					} else {
-						cur = cur.Print(string(v))
+						cur = cur.PrintHL(string(v))
 					}
 				} else {
-					cur = cur.Print(string(v))
+					cur = cur.PrintHL(string(v))
 				}
 				cur = cur.Clear()
 			}
@@ -210,10 +210,10 @@ func (this *Screen) Repaint() {
 			//cur = cur.Col(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
 			for _, s := range util.Prettify(line.Short) {
 				cur.X = 24 - this.col
-				cur = cur.Printf(" %s", s).Clear()
+				cur = cur.PrintfHL(" %s", s).Clear()
 			}
 			cur.X = 24 - this.col
-			cur = cur.Col(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
+			cur = cur.Fg(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
 			//cur.X = 24
 			//cur = cur.Clear()
 		}
@@ -225,7 +225,7 @@ func (this *Screen) Repaint() {
 	// status bar
 	{
 		cur := this.NewCursor(0, h-1)
-		cur.Style = tcell.StyleDefault.Reverse(true)
+		cur.Style = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite)
 		cur = cur.Printf("file: %d/%d ", this.buffer.Pos, len(this.buffer.Lines))
 		if this.col != 0 {
 			cur = cur.Printf("col: %d ", this.col)
