@@ -207,7 +207,11 @@ func (this *Screen) Repaint() {
 		case 2: // expand and prettify
 			//cur.X = 24
 			//cur = cur.Col(tcell.ColorTeal).Printf(" level: ").Level(line.Level).Printf(", time: %v", line.Time).Clear()
-			for _, s := range util.Prettify(line.Short) {
+			str := line.Short
+			if str == "" {
+				str = line.Str
+			}
+			for _, s := range util.Prettify(str) {
 				cur.X = 24 - this.col
 				cur = cur.PrintfHL(" %s", s).Clear()
 			}
