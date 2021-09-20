@@ -3,18 +3,24 @@ package tbuf
 import (
 	"encoding/json"
 	"sort"
+	"strconv"
 	"time"
 )
 
 // change for different pattern
-var Schema = struct {
+type Schema struct {
 	Message string
 	Time    string
 	Level   string
-}{
+}
+
+var def = Schema{
 	Message: "message",
 	Time:    "time",
 	Level:   "level",
+}
+var alt = Schema{
+	Message: "msg",
 }
 
 type Line struct {
@@ -73,24 +79,33 @@ func ParseLine(s string, log func(...interface{})) (out Line) {
 		}
 
 		// if message, then use it as main message
-		if j, exists := out.Tags[Schema.Message]; exists {
-			delete(out.Tags, Schema.Message)
+		if j, exists := out.Tags[def.Message]; exists {
+			delete(out.Tags, def.Message)
+			out.Short = unmarshalOrString(j)
+		} else if j, exists := out.Tags[alt.Message]; exists {
+			delete(out.Tags, def.Message)
 			out.Short = unmarshalOrString(j)
 		}
 
 		// check for "time"
-		if j, exists := out.Tags[Schema.Time]; exists {
+		if j, exists := out.Tags[def.Time]; exists {
 			err := json.Unmarshal(j, &out.Time)
 			if err == nil {
-				delete(out.Tags, Schema.Time)
+				delete(out.Tags, def.Time)
+			} else {
+				epoch, err := strconv.ParseInt(string(j), 10, 64)
+				if err == nil {
+					out.Time = time.Unix(epoch, 0)
+					delete(out.Tags, def.Time)
+				}
 			}
 		}
 
 		// check for "time"
-		if j, exists := out.Tags[Schema.Level]; exists {
+		if j, exists := out.Tags[def.Level]; exists {
 			err := json.Unmarshal(j, &out.Level)
 			if err == nil {
-				delete(out.Tags, Schema.Level)
+				delete(out.Tags, def.Level)
 			}
 		}
 	}
