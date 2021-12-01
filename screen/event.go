@@ -80,36 +80,50 @@ func (this *Screen) eventNav(ev *tcell.EventKey) error {
 		this.help = true
 		this.Repaint()
 	case tcell.KeyUp:
+		this.detoffset = 0
 		this.buffer.Up(nil)
 		if this.row > 0 {
 			this.row--
 		}
 		this.Repaint()
 	case tcell.KeyDown:
+		this.detoffset = 0
 		this.buffer.Down(nil)
 		if this.row < h-2 {
 			this.row++
 		}
 		this.Repaint()
 	case tcell.KeyPgUp:
-		for i := 0; i < 25; i++ {
-			this.buffer.Up(nil)
+		if this.details > 0 {
+			this.detoffset -= 5
+			if this.detoffset < 0 {
+				this.detoffset = 0
+			}
+		} else {
+			for i := 0; i < 25; i++ {
+				this.buffer.Up(nil)
+			}
+			this.row -= 25
+			if this.row < 0 {
+				this.row = 0
+			}
 		}
-		this.row -= 25
-		if this.row < 0 {
-			this.row = 0
-		}
-		//this.Repaint()
 		this.Refresh = true
 	case tcell.KeyPgDn:
-		for i := 0; i < 25; i++ {
-			this.buffer.Down(nil)
+		if this.details > 0 {
+			this.detoffset += 5
+			if this.detoffset < 0 {
+				this.detoffset = 0
+			}
+		} else {
+			for i := 0; i < 25; i++ {
+				this.buffer.Down(nil)
+			}
+			this.row += 25
+			if this.row > h-2 {
+				this.row = h - 2
+			}
 		}
-		this.row += 25
-		if this.row > h-2 {
-			this.row = h - 2
-		}
-		//this.Repaint()
 		this.Refresh = true
 
 	case tcell.KeyLeft:
@@ -163,6 +177,7 @@ func (this *Screen) eventNav(ev *tcell.EventKey) error {
 			this.Repaint()
 
 		case 'n': //scan next
+			this.detoffset = 0
 			if this.pattern != nil {
 				this.buffer.Down(func(l tbuf.Line) bool {
 					if this.row < h-2 {
@@ -181,6 +196,7 @@ func (this *Screen) eventNav(ev *tcell.EventKey) error {
 				this.Repaint()
 			}
 		case 'N': //scan prev
+			this.detoffset = 0
 			if this.pattern != nil {
 				this.buffer.Up(func(l tbuf.Line) bool {
 					if this.row > 0 {
@@ -264,11 +280,13 @@ func (this *Screen) eventNav(ev *tcell.EventKey) error {
 			}
 
 		case 'O':
+			this.detoffset = 0
 			this.buffer = this.origBuf
 			this.Repaint()
 
 		//case '?': // search backward ?
 		case 'd':
+			this.detoffset = 0
 			this.details++
 			if this.details > 2 {
 				this.details = 0

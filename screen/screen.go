@@ -16,23 +16,24 @@ import (
 )
 
 type Screen struct {
-	Done     chan struct{}
-	m        sync.Mutex
-	scr      tcell.Screen
-	origBuf  *tbuf.Buffer
-	buffer   *tbuf.Buffer
-	row      int
-	col      int
-	log      func(...interface{})
-	details  int
-	help     bool
-	pattern  *regexp.Regexp
-	Refresh  bool
-	input    *util.HistoryInput
-	onEnter  func()
-	onChange func()
-	query    string
-	queryEnd string
+	Done      chan struct{}
+	m         sync.Mutex
+	scr       tcell.Screen
+	origBuf   *tbuf.Buffer
+	buffer    *tbuf.Buffer
+	row       int
+	col       int
+	log       func(...interface{})
+	details   int
+	detoffset int
+	help      bool
+	pattern   *regexp.Regexp
+	Refresh   bool
+	input     *util.HistoryInput
+	onEnter   func()
+	onChange  func()
+	query     string
+	queryEnd  string
 }
 
 func NewScreen(log func(...interface{}), buffer *tbuf.Buffer) *Screen {
@@ -44,6 +45,8 @@ func NewScreen(log func(...interface{}), buffer *tbuf.Buffer) *Screen {
 	scr.HideCursor()
 	undoTcellSig()
 
+	w, h := scr.Size()
+
 	this := &Screen{
 		scr:     scr,
 		log:     log,
@@ -52,6 +55,7 @@ func NewScreen(log func(...interface{}), buffer *tbuf.Buffer) *Screen {
 		input:   &util.HistoryInput{},
 		Done:    make(chan struct{}),
 	}
+	this.log("size: %d/%d", w, h)
 	//this.pattern = regexp.MustCompile(`lighthouse`)
 	go util.Recover(func() {
 		defer close(this.Done)
@@ -70,8 +74,6 @@ func NewScreen(log func(...interface{}), buffer *tbuf.Buffer) *Screen {
 		os.Exit(-1)
 	})
 	scr.Fill(' ', tcell.StyleDefault)
-	w, h := scr.Size()
-	this.log("size: %d/%d", w, h)
 	this.row = h - 5
 	return this
 }
@@ -131,9 +133,9 @@ func (this *Screen) Repaint() {
 			cur.Line(line, this.col)
 		} else {
 			this.NewCursor(0, this.row-y).Clear()
-			this.row--
-			this.log("REPAINT for better framing")
-			this.Refresh = true
+			//this.row--
+			//this.log("REPAINT for better framing")
+			//this.Refresh = true
 		}
 	}
 
@@ -156,6 +158,7 @@ func (this *Screen) Repaint() {
 
 	// cursor
 	cur := this.NewCursor(-this.col, this.row)
+	cur.Offset = this.detoffset
 	cur.Style = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite)
 	if line, ok := this.buffer.Get(); ok {
 		//this.log("cur: %+v", line)
@@ -182,9 +185,9 @@ func (this *Screen) Repaint() {
 					if err == nil {
 						j, _ := json.MarshalIndent(x, "", "  ")
 						lines := strings.Split(string(j), "\n")
-						this.log("subtag: %q", lines[1])
+						//this.log("subtag: %q", lines[1])
 						for _, l := range lines[1 : len(lines)-1] {
-							this.log("subtag: %q", l)
+							//this.log("subtag: %q", l)
 							cur = cur.Clear()
 							cur.X = 24 - this.col
 							cur = cur.PrintfHL("    %s", l)
@@ -197,12 +200,12 @@ func (this *Screen) Repaint() {
 				}
 				cur = cur.Clear()
 			}
-			if this.row > 0 && cur.Y > h {
-				this.row--
-				this.log("REPAINT for better framing")
-				this.Refresh = true
-				return
-			}
+			//if this.row > 0 && cur.Y > h {
+			//	this.row--
+			//	this.log("REPAINT for better framing")
+			//	this.Refresh = true
+			//	return
+			//}
 
 		case 2: // expand and prettify
 			//cur.X = 24

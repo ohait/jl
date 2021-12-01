@@ -24,13 +24,18 @@ type Cursor struct {
 	scr     *Screen
 	X       int
 	Y       int
+	Offset  int
 	Style   tcell.Style
 	pattern *regexp.Regexp
 }
 
 func (this Cursor) CR(x int) Cursor {
 	this.X = x
-	this.Y++
+	if this.Offset > 0 {
+		this.Offset--
+	} else {
+		this.Y++
+	}
 	return this
 }
 
@@ -80,6 +85,9 @@ func (this Cursor) Print(s string) Cursor {
 }
 
 func (this Cursor) print(s string, dim bool) Cursor {
+	if this.Offset > 0 {
+		return this
+	}
 	for _, ch := range s {
 		switch ch {
 		case '"', '\'', '(', '{', '}', ')', ',', ':', '[', ']', '/':
@@ -113,6 +121,10 @@ func (this Cursor) Time(t time.Time) Cursor {
 }
 
 func (this Cursor) Fill(r rune) Cursor {
+	if this.Offset > 0 {
+		this.Offset--
+		return this
+	}
 	w, _ := this.scr.scr.Size()
 	for ; this.X < w; this.X++ {
 		this.scr.scr.SetContent(this.X, this.Y, r, nil, this.Style)

@@ -29,6 +29,7 @@ func main() {
 
 	sigchan := make(chan os.Signal, 10)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	sigCt := 0
 
 	readInit()
 
@@ -51,7 +52,11 @@ LOOP:
 
 		case sig := <-sigchan:
 			log("SIG: %v", sig)
-			break LOOP
+			switch sigCt {
+			case 0, 1:
+			default:
+				break LOOP
+			}
 		}
 	}
 }
