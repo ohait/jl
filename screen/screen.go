@@ -110,11 +110,8 @@ func (this *Screen) Repaint() {
 	nomatch := tcell.StyleDefault.Foreground(tcell.Color246).Background(tcell.Color232)
 
 	if this.details > 0 {
-		if this.row < 5 {
-			this.row++
-			this.Refresh = true
-		} else if this.row > 5 {
-			this.row--
+		if this.row != 5 {
+			this.row = 5
 			this.Refresh = true
 		}
 	}
