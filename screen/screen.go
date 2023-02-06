@@ -293,7 +293,7 @@ func (this *Screen) Repaint() {
 }
 
 func undoTcellSig() error {
-	tio, err := unix.IoctlGetTermios(int(os.Stdout.Fd()), unix.TCGETS)
+	tio, err := unix.IoctlGetTermios(int(os.Stdout.Fd()), GET_TERMIOS)
 	if err != nil {
 		return err
 	}
@@ -305,5 +305,5 @@ func undoTcellSig() error {
 		Cc:    tio.Cc,
 	}
 	raw.Lflag |= unix.ISIG
-	return unix.IoctlSetTermios(int(os.Stdout.Fd()), unix.TCSETS, raw)
+	return unix.IoctlSetTermios(int(os.Stdout.Fd()), SET_TERMIOS, raw)
 }
