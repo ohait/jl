@@ -89,7 +89,7 @@ func log(args ...interface{}) {
 }
 
 func IsTerminal(fd uintptr) bool {
-	_, err := unix.IoctlGetTermios(int(fd), unix.TCGETS)
+	_, err := unix.IoctlGetTermios(int(fd), screen.GET_TERMIOS)
 	return err == nil
 }
 
