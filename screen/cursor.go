@@ -93,7 +93,10 @@ func (this Cursor) print(s string, dim bool) Cursor {
 		case '"', '\'', '(', '{', '}', ')', ',', ':', '[', ']', '/':
 			this.scr.scr.SetContent(this.X, this.Y, ch, nil, this.Style.Dim(dim))
 		case '\t':
-			this.scr.scr.SetContent(this.X, this.Y, '⇥', nil, this.Style.Bold(true).Foreground(tcell.Color220))
+			style := this.Style.Bold(true).Foreground(tcell.Color220)
+			this.scr.scr.SetContent(this.X, this.Y, '⇥', nil, style)
+			this.X++
+			this.scr.scr.SetContent(this.X, this.Y, ' ', nil, style)
 		case '\n':
 			this.scr.scr.SetContent(this.X, this.Y, '␍', nil, this.Style.Bold(true).Foreground(tcell.Color220))
 		default:

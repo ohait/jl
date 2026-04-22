@@ -2,19 +2,37 @@ package util
 
 import (
 	"bytes"
+	"errors"
 	"os/exec"
 )
 
-// very crude implementation using exec, as long as it works.
-// Requires xclip to be installed
+// Clipboard support across common environments.
+// macOS: pbcopy/pbpaste
+// Linux/X11: xclip
 func ClipCopy(s string) error {
-	cmd := exec.Command("xclip")
-	cmd.Stdin = bytes.NewBufferString(s)
-	return cmd.Run()
+	if p, err := exec.LookPath("pbcopy"); err == nil {
+		cmd := exec.Command(p)
+		cmd.Stdin = bytes.NewBufferString(s)
+		return cmd.Run()
+	}
+	if p, err := exec.LookPath("xclip"); err == nil {
+		cmd := exec.Command(p)
+		cmd.Stdin = bytes.NewBufferString(s)
+		return cmd.Run()
+	}
+	return errors.New("no clipboard tool found (tried pbcopy and xclip)")
 }
 
 func ClipPaste() (string, error) {
-	cmd := exec.Command("xclip", "-o")
+	var cmd *exec.Cmd
+	if p, err := exec.LookPath("pbpaste"); err == nil {
+		cmd = exec.Command(p)
+	} else if p, err := exec.LookPath("xclip"); err == nil {
+		cmd = exec.Command(p, "-o")
+	} else {
+		return "", errors.New("no clipboard tool found (tried pbpaste and xclip)")
+	}
+
 	b := bytes.NewBuffer(nil)
 	cmd.Stdout = b
 	err := cmd.Run()
